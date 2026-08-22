@@ -102,7 +102,7 @@ chat-app/
 
 1. **Clone & Install Dependencies**:
    ```bash
-   git clone <https://github.com/akashmuhammadabrrar/Chat-Assignment-tagyeer.gitrepository_url>
+   git clone [https://github.com/akashmuhammadabrrar/Chat-Assignment-tagyeer.gitrepository_url]
    cd chat-app
    npm install
    ```
