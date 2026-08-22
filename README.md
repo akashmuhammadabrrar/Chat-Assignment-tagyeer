@@ -23,7 +23,7 @@ A modern, high-performance real-time messaging web application built with **Next
 
 | Domain | Technology |
 |---|---|
-| **Framework** | Next.js 16 (App Router, Turbopack, React 19) |
+| **Typography** | Google Fonts (**Quicksand** via `next/font/google`) |
 | **Theme & Dark Mode** | `next-themes` (`ThemeToggle`, Light/Dark semantic tokens) |
 | **State Management** | Redux Toolkit (`authSlice`, `chatSlice`, `uiSlice`) |
 | **Server State & Caching** | TanStack Query v5 (React Query) |
@@ -115,3 +115,41 @@ chat-app/
    npx tsc --noEmit  # TypeScript check
    npm run build     # Next.js production build
    ```
+
+---
+
+## 🚀 Deploying to Vercel
+
+Deploying this Next.js 16 app to Vercel is super simple:
+
+### Option A: Via GitHub / Vercel Dashboard (Recommended)
+
+1. Push your repository to GitHub:
+   ```bash
+   git add .
+   git commit -m "Deploy commit"
+   git push origin main
+   ```
+2. Go to [vercel.com/new](https://vercel.com/new).
+3. Import your GitHub repository (`Chat-Assignment-tagyeer`).
+4. Keep all default settings:
+   - **Framework Preset**: Next.js
+   - **Build Command**: `npm run build`
+   - **Output Directory**: `.next`
+5. Click **Deploy**. Vercel will build and host your site automatically with zero extra configuration!
+
+### Option B: Via Vercel CLI
+
+1. Install Vercel CLI globally:
+   ```bash
+   npm i -g vercel
+   ```
+2. Login to your Vercel account:
+   ```bash
+   vercel login
+   ```
+3. Run deploy command from project root:
+   ```bash
+   vercel --prod
+   ```
+
