@@ -81,6 +81,10 @@ export interface Message {
   text: string;
   createdAt: string;
   status?: MessageStatus;
+  /** IDs of users who have read this message (from server) */
+  readBy?: string[];
+  /** Derived client-side: true if current user is in readBy */
   isSeen?: boolean;
 }
+
 

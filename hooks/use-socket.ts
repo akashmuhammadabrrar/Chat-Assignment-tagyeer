@@ -30,12 +30,17 @@ export function useSocket() {
       const rawMsg = data?.message ?? data;
       if (!rawMsg) return;
 
+      const readBy: string[] = Array.isArray(rawMsg.readBy) ? rawMsg.readBy : [];
+
       const message: Message = {
-        _id: rawMsg._id || Date.now().toString(),
+        _id: rawMsg._id || String(Date.now()),
         conversationId: rawMsg.conversationId || rawMsg.conversation,
         sender: rawMsg.sender,
         text: rawMsg.text || rawMsg.content || "",
         createdAt: rawMsg.createdAt || new Date().toISOString(),
+        readBy,
+        status: "sent",
+        isSeen: false,
       };
 
       if (message.conversationId) {
@@ -45,7 +50,10 @@ export function useSocket() {
             (m) =>
               m._id === message._id ||
               (m.text === message.text &&
-                Math.abs(new Date(m.createdAt || 0).getTime() - new Date(message.createdAt).getTime()) < 3000)
+                Math.abs(
+                  new Date(m.createdAt ?? 0).getTime() -
+                    new Date(message.createdAt).getTime()
+                ) < 3000)
           );
 
           if (existingIndex >= 0) {
@@ -54,8 +62,10 @@ export function useSocket() {
             list.push(message);
           }
 
-          return list.sort(
-            (a, b) => new Date(a.createdAt || 0).getTime() - new Date(message.createdAt).getTime()
+          return [...list].sort(
+            (a, b) =>
+              new Date(a.createdAt ?? 0).getTime() -
+              new Date(b.createdAt ?? 0).getTime()
           );
         });
 

@@ -5,38 +5,48 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { ArrowRight, Play, CheckCircle2, Zap, Users, MessageSquare, Lock } from "lucide-react";
 import { Container } from "@/components/ui/container";
-import { Button } from "@/components/ui/button";
 
-const TITLE = "Where Whispers Happen in Real Time.";
-const CHARS = TITLE.split("");
-const STAGGER = 0.07;
-const ANIM_DURATION = 0.5;
-const WAVE_PERIOD = CHARS.length * STAGGER;
+const STAGGER = 0.05;
+const ANIM_DURATION = 0.45;
 
-function FloatingTitle() {
+function AnimatedLine({ text, startIndex }: { text: string; startIndex: number }) {
+  const chars = text.split("");
   return (
-    <h1 className="text-4xl font-extrabold tracking-tight text-brand-dark sm:text-5xl lg:text-6xl xl:text-7xl leading-[1.2] flex flex-wrap">
-      {CHARS.map((char, i) =>
-        char === " " ? (
-          <span key={i} style={{ display: "inline-block", width: "0.3em" }} />
+    <span className="inline-block whitespace-nowrap">
+      {chars.map((char, idx) => {
+        const i = startIndex + idx;
+        return char === " " ? (
+          <span key={idx} style={{ display: "inline-block", width: "0.28em" }} />
         ) : (
           <motion.span
-            key={i}
+            key={idx}
             className="inline-block"
             style={{ willChange: "transform, opacity" }}
-            animate={{ y: [0, -18, 0], opacity: [0.8, 1, 0.8] }}
+            animate={{ y: [0, -10, 0], opacity: [0.85, 1, 0.85] }}
             transition={{
               duration: ANIM_DURATION,
               ease: "easeInOut",
               repeat: Infinity,
-              repeatDelay: WAVE_PERIOD - ANIM_DURATION,
+              repeatDelay: 2.5,
               delay: i * STAGGER,
             }}
           >
             {char}
           </motion.span>
-        )
-      )}
+        );
+      })}
+    </span>
+  );
+}
+
+function FloatingTitle() {
+  return (
+    <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-5xl font-extrabold tracking-tight text-brand-dark leading-[1.25]">
+      {/* 2 lines for mobile & desktop */}
+      <span className="flex flex-col gap-1 sm:gap-2">
+        <AnimatedLine text="Where Whispers" startIndex={0} />
+        <AnimatedLine text="Happen in Real Time." startIndex={14} />
+      </span>
     </h1>
   );
 }
@@ -156,7 +166,6 @@ export function HeroSection() {
         </div>
 
         <motion.div
-          id="features"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.5 }}

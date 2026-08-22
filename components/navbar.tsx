@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, ArrowRight, LogOut, User as UserIcon, Sparkles } from "lucide-react";
+import { Menu, X, ArrowRight, LogOut } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
@@ -12,19 +12,35 @@ import { useAuth } from "@/hooks/use-auth";
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const [isScrolled, setIsScrolled] = React.useState(false);
   const { user, isAuthenticated, logout } = useAuth();
+
+  React.useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const navLinks = [
     { label: "Home", href: "/" },
-    { label: "Chats", href: "/chat" },
-    { label: "Contacts", href: "/chat" },
     { label: "Features", href: "#features" },
+    { label: "About", href: "#about" },
+    { label: "Chats", href: "/chat" },
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-transparent transition-all duration-300">
+    <header
+      className={`sticky top-0 z-50 w-full transition-all duration-300 ${
+        isScrolled
+          ? "bg-white/50 dark:bg-black/50 backdrop-blur-xl border-b border-brand-dark/20 dark:border-white/10 shadow-xl"
+          : "bg-transparent border-b border-transparent shadow-none"
+      }`}
+    >
       <Container className="px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 sm:h-18 lg:h-20 items-center justify-between bg-transparent">
+        <div className="flex h-16 sm:h-18 lg:h-20 items-center justify-between">
           <div className="flex items-center gap-6 lg:gap-10">
             <Link
               href="/"
@@ -66,7 +82,6 @@ export function Navbar() {
 
             {isAuthenticated ? (
               <div className="flex items-center gap-2 sm:gap-3">
-                {/* User Profile Badge */}
                 <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-brand-dark/10 dark:bg-card border border-brand-dark/15 dark:border-white/10 text-brand-dark dark:text-secondary">
                   <div className="h-6 w-6 rounded-full bg-brand-dark text-secondary dark:bg-secondary dark:text-brand-dark flex items-center justify-center text-xs font-black">
                     {user?.name?.charAt(0).toUpperCase() || "U"}
@@ -76,7 +91,6 @@ export function Navbar() {
                   </span>
                 </div>
 
-                {/* Logout Button */}
                 <Button
                   onClick={logout}
                   size="lg"
@@ -87,7 +101,6 @@ export function Navbar() {
                 </Button>
               </div>
             ) : (
-              /* Login Button */
               <Link href="/login">
                 <Button
                   size="lg"
