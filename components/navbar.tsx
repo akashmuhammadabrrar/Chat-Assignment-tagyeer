@@ -4,13 +4,15 @@ import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, ArrowRight } from "lucide-react";
+import { Menu, X, ArrowRight, LogOut, User as UserIcon, Sparkles } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const { user, isAuthenticated, logout } = useAuth();
 
   const navLinks = [
     { label: "Home", href: "/" },
@@ -62,14 +64,39 @@ export function Navbar() {
           <div className="flex items-center gap-2.5 sm:gap-4">
             <ThemeToggle />
 
-            <Link href="/login">
-              <Button
-                size="lg"
-                className="h-9 sm:h-10 px-5 sm:px-7 text-xs sm:text-sm font-bold tracking-wide rounded-xl shadow-lg bg-secondary text-secondary-foreground hover:bg-white dark:bg-secondary dark:text-secondary-foreground dark:hover:bg-white transition-all hover:scale-[1.03] cursor-pointer"
-              >
-                Login
-              </Button>
-            </Link>
+            {isAuthenticated ? (
+              <div className="flex items-center gap-2 sm:gap-3">
+                {/* User Profile Badge */}
+                <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-brand-dark/10 dark:bg-card border border-brand-dark/15 dark:border-white/10 text-brand-dark dark:text-secondary">
+                  <div className="h-6 w-6 rounded-full bg-brand-dark text-secondary dark:bg-secondary dark:text-brand-dark flex items-center justify-center text-xs font-black">
+                    {user?.name?.charAt(0).toUpperCase() || "U"}
+                  </div>
+                  <span className="text-xs font-extrabold max-w-[100px] truncate">
+                    {user?.name || "User"}
+                  </span>
+                </div>
+
+                {/* Logout Button */}
+                <Button
+                  onClick={logout}
+                  size="lg"
+                  className="h-9 sm:h-10 px-4 sm:px-5 text-xs sm:text-sm font-bold tracking-wide rounded-xl shadow-lg bg-destructive text-white hover:bg-destructive/90 transition-all hover:scale-[1.03] cursor-pointer flex items-center gap-1.5"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Logout</span>
+                </Button>
+              </div>
+            ) : (
+              /* Login Button */
+              <Link href="/login">
+                <Button
+                  size="lg"
+                  className="h-9 sm:h-10 px-5 sm:px-7 text-xs sm:text-sm font-bold tracking-wide rounded-xl shadow-lg bg-secondary text-secondary-foreground hover:bg-white dark:bg-secondary dark:text-secondary-foreground dark:hover:bg-white transition-all hover:scale-[1.03] cursor-pointer"
+                >
+                  Login
+                </Button>
+              </Link>
+            )}
 
             <Button
               variant="ghost"
@@ -143,11 +170,35 @@ export function Navbar() {
                 </div>
 
                 <div className="pt-6 border-t border-foreground/15 dark:border-border flex flex-col gap-3">
-                  <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                    <Button className="w-full justify-center h-11 text-sm font-bold rounded-xl bg-foreground text-background hover:opacity-90">
-                      Login to Workspace
-                    </Button>
-                  </Link>
+                  {isAuthenticated ? (
+                    <>
+                      <div className="flex items-center gap-3 p-3 rounded-xl bg-black/5 dark:bg-white/5 text-brand-dark dark:text-secondary">
+                        <div className="h-8 w-8 rounded-full bg-brand-dark text-secondary dark:bg-secondary dark:text-brand-dark flex items-center justify-center font-bold text-sm">
+                          {user?.name?.charAt(0).toUpperCase() || "U"}
+                        </div>
+                        <div className="flex flex-col overflow-hidden">
+                          <span className="text-sm font-extrabold truncate">{user?.name}</span>
+                          <span className="text-xs opacity-75 truncate">{user?.phone}</span>
+                        </div>
+                      </div>
+                      <Button
+                        onClick={() => {
+                          setMobileMenuOpen(false);
+                          logout();
+                        }}
+                        className="w-full justify-center h-11 text-sm font-bold rounded-xl bg-destructive text-white hover:bg-destructive/90 flex items-center gap-2"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        <span>Logout Account</span>
+                      </Button>
+                    </>
+                  ) : (
+                    <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+                      <Button className="w-full justify-center h-11 text-sm font-bold rounded-xl bg-foreground text-background hover:opacity-90">
+                        Login to Workspace
+                      </Button>
+                    </Link>
+                  )}
                 </div>
               </motion.div>
             </>

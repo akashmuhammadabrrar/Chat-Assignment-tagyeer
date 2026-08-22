@@ -1,0 +1,523 @@
+Chat API
+ 1.0.0 
+OAS 3.0
+A real-time 1-to-1 and group chat API (REST + WebSocket) for the take-home assignment.
+
+This spec is intentionally request-focused. It documents the endpoints, methods, parameters, and request bodies — but it does not specify response bodies or status codes. Documenting the request/response structures in your own way is part of the task: inspect the live responses and formalize them however you prefer.
+
+Authentication
+POST /auth/login with a phone number and a name. There is no separate signup — a new phone number is registered automatically; an existing one logs in. The response includes a JWT.
+Send the token on every protected request: Authorization: Bearer <token>.
+For the WebSocket, pass the same token in the Socket.io handshake auth.
+WebSocket (Socket.io) — not part of OpenAPI, listed here for reference
+Connect to the server's root origin — NOT the /api base used for REST. The socket lives at the host root (Socket.io serves itself at /socket.io/):
+
+const socket = io('https://frontend-task-chatapp.onrender.com', { auth: { token } });
+Connect with the JWT in the handshake (an invalid/missing token is rejected). Events:
+
+client → server message:send — { conversationId, text } (optional ack callback).
+server → client message:new — a new message arrived for you.
+server → client conversation:updated — a group you're in changed (created, renamed, or members/admins changed).
+Groups
+A conversation is a direct (1-to-1) chat or a group with three or more members. Groups have a name and one or more admins (the creator starts as an admin). Only admins add/remove members, promote others to admin, and rename; any member can leave. Group messages use the same POST /messages endpoint and message:new event.
+
+Servers
+
+{baseUrl}/api - Live deployment
+Computed URL:https://frontend-task-chatapp.onrender.com/api
+Server variables
+baseUrl
+https://frontend-task-chatapp.onrender.com
+
+Authorize
+Auth
+Login / register and current user
+
+
+
+POST
+/auth/login
+Log in or register
+
+
+
+GET
+/auth/me
+Current user
+
+
+
+Returns the user associated with the bearer token. Useful for restoring a session.
+
+Parameters
+Cancel
+No parameters
+
+Execute
+Clear
+Responses
+Curl
+
+curl -X 'GET' \
+  'https://frontend-task-chatapp.onrender.com/api/auth/me' \
+  -H 'accept: */*' \
+  -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2YTg4M2FjNGU1ZDZhYWM5NzUyMjAyM2EiLCJpYXQiOjE3ODczMTI4MzYsImV4cCI6MTc4NzkxNzYzNn0.nq43LSwSVNZ2x7Pr3dcuW2CbjFkAL-Dm03f1LTkkxSc'
+Request URL
+https://frontend-task-chatapp.onrender.com/api/auth/me
+Server response
+Code	Details
+200	
+Response body
+Download
+{
+  "_id": "6a883ac4e5d6aac97522023a",
+  "name": "Abrrar",
+  "phone": "01758472964",
+  "createdAt": "2026-08-21T11:47:16.537Z"
+}
+Response headers
+ access-control-allow-origin: * 
+ alt-svc: h3=":443"; ma=86400 
+ cf-cache-status: DYNAMIC 
+ cf-ray: a2e967e1ae5341fc-DAC 
+ content-encoding: br 
+ content-length: 93 
+ content-type: application/json; charset=utf-8 
+ date: Fri,21 Aug 2026 11:47:56 GMT 
+ etag: W/"6f-hmUDLT5xH0No+KXxhhyf6CQexPM" 
+ priority: u=1,i 
+ rndr-id: 6122af83-3bc6-4643 
+ server: cloudflare 
+ server-timing: cfExtPri 
+ vary: Accept-Encoding 
+ x-powered-by: Express 
+ x-render-origin-server: Render 
+Responses
+Code	Description	Links
+default	
+Response bodies and status codes are intentionally not specified in this document. Inspect the live API and document the responses yourself.
+
+No links
+Users
+Find other users
+
+
+
+GET
+/users/search
+Search users by name or phone
+
+
+
+Parameters
+Cancel
+Name	Description
+q *
+string
+(query)
+Search term — a user's name or phone number.
+
+Ada
+Execute
+Clear
+Responses
+Curl
+
+curl -X 'GET' \
+  'https://frontend-task-chatapp.onrender.com/api/users/search?q=Ada' \
+  -H 'accept: */*' \
+  -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2YTg4M2FjNGU1ZDZhYWM5NzUyMjAyM2EiLCJpYXQiOjE3ODczMTI4MzYsImV4cCI6MTc4NzkxNzYzNn0.nq43LSwSVNZ2x7Pr3dcuW2CbjFkAL-Dm03f1LTkkxSc'
+Request URL
+https://frontend-task-chatapp.onrender.com/api/users/search?q=Ada
+Server response
+Code	Details
+200	
+Response body
+Download
+[
+  {
+    "_id": "6a882468e5d6aac97521e25e",
+    "name": "Ada Lovelace",
+    "phone": "+15551234567"
+  },
+  {
+    "_id": "6a8827c4e5d6aac97521e3ec",
+    "name": "Ada Probe",
+    "phone": "+15550001001"
+  },
+  {
+    "_id": "6a882806e5d6aac97521e4b3",
+    "name": "Ada Lovelace",
+    "phone": "+15550000001"
+  },
+  {
+    "_id": "6a88295ce5d6aac97521e62d",
+    "name": "Ada Lovelace",
+    "phone": "+8801733586288"
+  },
+  {
+    "_id": "6a882970e5d6aac97521e631",
+    "name": "Ada Lovelace",
+    "phone": "+880173358628"
+  },
+  {
+    "_id": "6a883617e5d6aac97521f5ed",
+    "name": "Ada Renamed",
+    "phone": "+1555157543"
+  },
+  {
+    "_id": "6a883776e5d6aac97521f97b",
+    "name": "Ada Updated",
+    "phone": "+15551234100"
+  },
+  {
+    "_id": "6a883786e5d6aac97521f9db",
+    "name": "Ada Lovelace",
+    "phone": "+1555123asdasdasd4567"
+  },
+  {
+    "_id": "6a8837d5e5d6aac97521faa4",
+    "name": "Ada Lovelace",
+    "phone": "015551234567"
+  },
+  {
+    "_id": "6a8837e9e5d6aac97521fab4",
+    "name": "Ada Lovelace",
+    "phone": "+880015551234567"
+  }
+]
+Response headers
+ access-control-allow-origin: * 
+ alt-svc: h3=":443"; ma=86400 
+ cf-cache-status: DYNAMIC 
+ cf-ray: a2e968526ced41fc-DAC 
+ content-encoding: br 
+ content-length: 221 
+ content-type: application/json; charset=utf-8 
+ date: Fri,21 Aug 2026 11:48:14 GMT 
+ etag: W/"32b-g34BRQJ6HIjANbH6ll7TXoopBiA" 
+ priority: u=1,i 
+ rndr-id: 32d787c5-ae22-48bf 
+ server: cloudflare 
+ server-timing: cfExtPri 
+ vary: Accept-Encoding 
+ x-powered-by: Express 
+ x-render-origin-server: Render 
+Responses
+Code	Description	Links
+default	
+Response bodies and status codes are intentionally not specified in this document. Inspect the live API and document the responses yourself.
+
+No links
+Conversations
+Direct conversations and message history
+
+
+
+GET
+/conversations
+List my conversations
+
+
+
+The conversations the current user is part of (direct and group).
+
+Parameters
+Cancel
+No parameters
+
+Execute
+Clear
+Responses
+Curl
+
+curl -X 'GET' \
+  'https://frontend-task-chatapp.onrender.com/api/conversations' \
+  -H 'accept: */*' \
+  -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2YTg4M2FjNGU1ZDZhYWM5NzUyMjAyM2EiLCJpYXQiOjE3ODczMTI4MzYsImV4cCI6MTc4NzkxNzYzNn0.nq43LSwSVNZ2x7Pr3dcuW2CbjFkAL-Dm03f1LTkkxSc'
+Request URL
+https://frontend-task-chatapp.onrender.com/api/conversations
+Server response
+Code	Details
+200	
+Response body
+Download
+{
+  "data": []
+}
+Response headers
+ access-control-allow-origin: * 
+ alt-svc: h3=":443"; ma=86400 
+ cf-cache-status: DYNAMIC 
+ cf-ray: a2e96914caa58dfd-DAC 
+ content-encoding: br 
+ content-length: 15 
+ content-type: application/json; charset=utf-8 
+ date: Fri,21 Aug 2026 11:48:45 GMT 
+ etag: W/"b-EFAlOux7Kcr/ZEgGkn2r+oFAbu4" 
+ priority: u=1,i 
+ rndr-id: 7f9d8671-1252-4270 
+ server: cloudflare 
+ server-timing: cfExtPri 
+ vary: Accept-Encoding 
+ x-powered-by: Express 
+ x-render-origin-server: Render 
+Responses
+Code	Description	Links
+default	
+Response bodies and status codes are intentionally not specified in this document. Inspect the live API and document the responses yourself.
+
+No links
+
+POST
+/conversations
+Start a direct conversation
+
+
+
+Start (or open) a 1-to-1 conversation with another user.
+
+Parameters
+Try it out
+No parameters
+
+Request body
+
+application/json
+Example Value
+Schema
+{
+  "userId": "665f0c2a9b1e4a0012ab34cd"
+}
+Responses
+Code	Description	Links
+default	
+Response bodies and status codes are intentionally not specified in this document. Inspect the live API and document the responses yourself.
+
+No links
+
+GET
+/conversations/{id}/messages
+Get message history
+
+
+
+Message history for a conversation, with pagination for loading older messages.
+
+Parameters
+Try it out
+Name	Description
+id *
+string
+(path)
+The conversation id.
+
+id
+limit
+integer
+(query)
+Maximum number of messages to return per page.
+
+Example : 20
+
+20
+before
+string
+(query)
+Cursor for fetching the page of messages before a given message.
+
+before
+Responses
+Code	Description	Links
+default	
+Response bodies and status codes are intentionally not specified in this document. Inspect the live API and document the responses yourself.
+
+No links
+Groups
+Group creation and member / admin management
+
+
+
+POST
+/conversations/group
+Create a group
+
+
+
+Create a group conversation. The creator becomes an admin.
+
+Parameters
+Cancel
+No parameters
+
+Request body
+
+application/json
+Edit Value
+Schema
+{
+  "name": "Project Team",
+  "participantIds": [
+    "string"
+  ]
+}
+Execute
+Responses
+Code	Description	Links
+default	
+Response bodies and status codes are intentionally not specified in this document. Inspect the live API and document the responses yourself.
+
+No links
+
+POST
+/conversations/{id}/participants
+Add members to a group
+
+
+
+Add one or more members to a group (admins only).
+
+Parameters
+Try it out
+Name	Description
+id *
+string
+(path)
+The group id.
+
+id
+Request body
+
+application/json
+Example Value
+Schema
+{
+  "userIds": [
+    "string"
+  ]
+}
+Responses
+Code	Description	Links
+default	
+Response bodies and status codes are intentionally not specified in this document. Inspect the live API and document the responses yourself.
+
+No links
+
+DELETE
+/conversations/{id}/participants/{userId}
+Remove a member / leave a group
+
+
+
+Remove a member from a group (admins only). Passing your own id leaves the group.
+
+Parameters
+Try it out
+Name	Description
+id *
+string
+(path)
+The group id.
+
+id
+userId *
+string
+(path)
+The member to remove (your own id to leave).
+
+userId
+Responses
+Code	Description	Links
+default	
+Response bodies and status codes are intentionally not specified in this document. Inspect the live API and document the responses yourself.
+
+No links
+
+POST
+/conversations/{id}/admins
+Promote a member to admin
+
+
+
+Promote an existing group member to admin (admins only).
+
+Parameters
+Try it out
+Name	Description
+id *
+string
+(path)
+The group id.
+
+id
+Request body
+
+application/json
+Example Value
+Schema
+{
+  "userId": "string"
+}
+Responses
+Code	Description	Links
+default	
+Response bodies and status codes are intentionally not specified in this document. Inspect the live API and document the responses yourself.
+
+No links
+
+PATCH
+/conversations/{id}
+Rename a group
+
+
+
+Messages
+Sending messages
+
+
+
+POST
+/messages
+Send a message
+
+
+
+System
+
+
+GET
+/health
+Health check
+
+
+
+Schemas
+LoginRequest{
+phone*	[...]
+name*	[...]
+}
+StartConversationRequest{
+userId*	[...]
+}
+SendMessageRequest{
+conversationId*	[...]
+text*	string
+example: Hello!
+}
+CreateGroupRequest{
+name*	[...]
+participantIds*	[
+Ids of the members to add (besides you).
+
+string]
+}
+AddParticipantsRequest{
+userIds*	[string]
+}
+PromoteRequest{
+userId*	string
+}
+RenameGroupRequest{
+name*	string
+example: Renamed Team
+}

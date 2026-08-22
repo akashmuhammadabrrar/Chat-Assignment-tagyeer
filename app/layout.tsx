@@ -17,6 +17,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Gossip — Real-Time Team Chat & Messaging Platform",
   description: "Industry-standard real-time team chat application powered by WebSockets, TanStack Query caching, and Redux Toolkit state management.",
+  icons: {
+    icon: "/logo/logo.png",
+    shortcut: "/logo/logo.png",
+    apple: "/logo/logo.png",
+  },
 };
 
 export default function RootLayout({
@@ -28,6 +33,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
+      data-scroll-behavior="smooth"
       className={`${quicksand.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body
@@ -39,5 +45,3 @@ export default function RootLayout({
     </html>
   );
 }
-
-
