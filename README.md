@@ -67,6 +67,9 @@ Here is a clear overview of how React hooks are leveraged throughout the codebas
 
 ---
 
+## Live links: 
+Open [https://chatgossip.netlify.app/] in your browser.
+
 ##  Directory Structure
 
 ```
@@ -99,10 +102,21 @@ chat-app/
 
 1. **Clone & Install Dependencies**:
    ```bash
-   git clone <repository_url>
+   git clone <https://github.com/akashmuhammadabrrar/Chat-Assignment-tagyeer.gitrepository_url>
    cd chat-app
    npm install
    ```
+
+   2. **Create an env.local file**:
+```
+NEXT_PUBLIC_API_URL=https://frontend-task-chatapp.onrender.com/api
+NEXT_PUBLIC_SOCKET_URL=https://frontend-task-chatapp.onrender.com
+```
+
+
+
+
+
 
 2. **Run Development Server**:
    ```bash
