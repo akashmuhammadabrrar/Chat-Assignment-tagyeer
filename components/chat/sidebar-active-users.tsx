@@ -7,6 +7,7 @@ export interface ActiveUser {
   name: string;
   avatar: string;
   bg: string;
+  conversationId?: string;
 }
 
 interface SidebarActiveUsersProps {
@@ -18,12 +19,14 @@ export function SidebarActiveUsers({
   users,
   onSelectUser,
 }: SidebarActiveUsersProps) {
+  if (!users || users.length === 0) return null;
+
   return (
     <div>
       <div className="flex items-center justify-between px-1 mb-2">
         <span className="text-[11px] font-extrabold uppercase tracking-wider text-brand-dark/70 dark:text-muted-foreground flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-          Active Online ({users.length})
+          Active Contacts ({users.length})
         </span>
       </div>
       <div className="flex items-center gap-2.5 overflow-x-auto pb-1 scrollbar-none">

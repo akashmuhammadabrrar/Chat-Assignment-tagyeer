@@ -25,7 +25,8 @@ export async function apiClient<T = any>(
     typeof window !== "undefined" ? localStorage.getItem("gossip_auth_token") : null;
 
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
+    Accept: "application/json",
+    ...(options.body ? { "Content-Type": "application/json" } : {}),
     ...(options.headers as Record<string, string>),
   };
 
