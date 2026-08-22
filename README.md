@@ -1,36 +1,117 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Gossip — Real-Time Team Chat Platform
 
-## Getting Started
+A modern, high-performance real-time messaging web application built with **Next.js 16 (App Router)**, **Redux Toolkit**, **TanStack Query**, and **Socket.io**. Designed for seamless 1-on-1 direct conversations and multi-participant group workspaces.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+##  Key Features
+
+-  **Instant Auth**: Single-step Login & Automatic Registration with phone number and name.
+-  **1-on-1 & Group Chats**: Create direct chats or group workspaces with custom names and member selection.
+-  **Group Admin Tools**: Promote members to Admin, rename groups inline, and add/remove participants.
+-  **Real-Time Messaging**: Socket.io WebSockets for instant message delivery and live group updates.
+-  **Message Pagination**: Cursor-based pagination (`before` parameter) with scroll-position restoration.
+-  **Delivery & Seen Ticks**: Visual indicators (`sending` ➔ `sent` ➔ `seen` green double-check).
+-  **Unread Badges & Bold Hints**: Highlighted unread messages and unread counter badges.
+-  **Smart Phone & Name Search**: Sanitized search with automatic BD & International phone format resolution.
+-  **Dark & Light Mode Themes**: Built-in Theme Switcher (`ThemeToggle`) powered by `next-themes` with full semantic design tokens for light mode (`#FFEED6`, `#9A9C57`, `#FAFD8F`) and dark mode (`#0D100B`, `#171914`, `#FAFD8F`). Hydration-safe with local storage theme preference persistence.
+-  **Modern Design & Glassmorphism**: Translucent scroll-responsive glass navbar, Framer Motion spring pop-ups, and smooth micro-interactions.
+
+---
+
+## Tech Stack
+
+| Domain | Technology |
+|---|---|
+| **Framework** | Next.js 16 (App Router, Turbopack, React 19) |
+| **Theme & Dark Mode** | `next-themes` (`ThemeToggle`, Light/Dark semantic tokens) |
+| **State Management** | Redux Toolkit (`authSlice`, `chatSlice`, `uiSlice`) |
+| **Server State & Caching** | TanStack Query v5 (React Query) |
+| **Real-Time WebSockets** | Socket.io Client |
+| **Styling & Icons** | Tailwind CSS v4, Lucide React Icons |
+| **Animations** | Framer Motion (Spring pop-ups & fluid transitions) |
+| **Type Safety** | TypeScript (`npx tsc --noEmit` verified) |
+
+---
+
+##  React Hooks Usage Explanation
+
+Here is a clear overview of how React hooks are leveraged throughout the codebase:
+
+### 1. `useMemo`
+- **Purpose**: Caches expensive calculations between renders so they only compute when dependencies change.
+- **Where Used**:
+  - `activeUsers` in `chat-sidebar.tsx`: Derives unique online contacts from active conversations in $O(n)$ time.
+  - `headerInfo` in `ChatPage`: Computes avatar initials and subtitle labels for selected chats.
+  - Custom hooks (`useMessages`, `useSendMessage`, `useGroupActions`): Returns stable object references to prevent unnecessary component re-renders.
+
+### 2. `useCallback`
+- **Purpose**: Returns memoized function references to prevent child components from re-rendering when props are passed down.
+- **Where Used**:
+  - `scrollToBottom` & `handleScroll` in `ChatPage` and `MessageList`.
+  - Event handlers in `GroupDetailsModal` and `AddMembersTab`.
+
+### 3. `useRef`
+- **Purpose**: Stores mutable values that persist across renders without causing re-renders (DOM nodes, socket instances, scroll positions).
+- **Where Used**:
+  - `socketRef` in `useSocket`: Holds the active Socket.io instance for event cleanup.
+  - `messagesContainerRef` & `messagesEndRef`: Controls auto-scroll and restores scroll position after loading older messages.
+  - `prevScrollHeightRef` in `MessageList`: Computes scroll delta when prepending paginated messages.
+
+### 4. Custom Hooks Architecture
+- `useAuth`: Manages login, session restore via `/auth/me`, and logout.
+- `useConversations`: Fetches and caches conversation list using TanStack Query.
+- `useMessages` & `useLoadMoreMessages`: Handles message history loading, optimistic sending, and cursor pagination.
+- `useGroupActions`: Encapsulates group mutations (`promoteToAdmin`, `renameGroup`, `removeMember`).
+- `useSocket`: Manages WebSocket lifecycle, listening to `message:new` and `conversation:updated`.
+
+---
+
+##  Directory Structure
+
+```
+chat-app/
+├── app/
+│   ├── chat/              # Main chat page
+│   ├── login/             # Login / registration page
+│   ├── layout.tsx         # Root layout & providers
+│   └── page.tsx           # Animated landing page
+├── components/
+│   ├── chat/
+│   │   ├── header/        # ChatHeader component
+│   │   ├── sidebar/       # ChatSidebar, search, contacts, footer
+│   │   ├── conversations/ # ConversationItem, skeleton, group modal
+│   │   ├── messages/      # MessageList, MessageItem, MessageInput
+│   │   └── group-details/ # GroupDetailsModal, member item, rename form
+│   ├── ui/                # Button, Container reusable primitives
+│   ├── navbar.tsx         # Responsive navbar with glassmorphism
+│   └── footer.tsx         # Responsive landing page footer
+├── hooks/                 # Custom React hooks
+├── lib/
+│   ├── api/               # Axios/Fetch client & API endpoint modules
+│   └── redux/             # Redux store & slices
+└── types/                 # TypeScript interfaces (Conversation, Message)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+##  Getting Started
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. **Clone & Install Dependencies**:
+   ```bash
+   git clone <repository_url>
+   cd chat-app
+   npm install
+   ```
 
-## Learn More
+2. **Run Development Server**:
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+3. **Verify Type Safety & Build**:
+   ```bash
+   npx tsc --noEmit  # TypeScript check
+   npm run build     # Next.js production build
+   ```
