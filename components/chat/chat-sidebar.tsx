@@ -24,13 +24,12 @@ import { UserResultItem } from "./user-result-item";
 import { SidebarFooter } from "./sidebar-footer";
 import { Conversation, SearchedUser } from "@/types/conversation";
 
-// ─── Main Sidebar ─────────────────────────────────────────────────────────────
-
 interface ChatSidebarProps {
   onNewChatClick?: () => void;
+  onToggleSidebar?: () => void;
 }
 
-export function ChatSidebar({ onNewChatClick }: ChatSidebarProps) {
+export function ChatSidebar({ onNewChatClick, onToggleSidebar }: ChatSidebarProps) {
   const dispatch = useAppDispatch();
   const activeConversationId = useAppSelector(selectActiveConversationId);
   const { user, logout } = useAuth();
@@ -135,10 +134,10 @@ export function ChatSidebar({ onNewChatClick }: ChatSidebarProps) {
   const isLoading = isFetching && conversations.length === 0;
 
   return (
-    <div className="w-80 sm:w-84 h-full bg-brand-secondary/95 dark:bg-card border-r border-brand-dark/15 dark:border-white/10 flex flex-col justify-between select-none">
+    <div className="w-80 sm:w-84 h-full bg-[#FFEED6] dark:bg-card border-r border-brand-dark/15 dark:border-white/10 sidebar-right-shadow flex flex-col justify-between select-none">
       {/* Header & Controls */}
       <div className="p-4 space-y-4">
-        <SidebarHeader />
+        <SidebarHeader onToggleSidebar={onToggleSidebar} />
 
         {/* Search — drives both conversation filter + user search */}
         <SidebarSearch value={searchQuery} onChange={setSearchQuery} />

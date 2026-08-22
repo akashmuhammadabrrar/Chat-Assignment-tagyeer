@@ -176,3 +176,27 @@
 .dark .glow-primary {
   box-shadow: 0 0 35px -5px rgba(154, 156, 87, 0.25);
 }
+
+/* WhatsApp-style subtle chat pattern overlay */
+.chat-pattern-bg {
+  background-color: #FFEED6;
+  background-image: radial-gradient(rgba(23, 25, 20, 0.06) 0.8px, transparent 0.8px), radial-gradient(rgba(23, 25, 20, 0.06) 0.8px, #FFEED6 0.8px);
+  background-size: 24px 24px;
+  background-position: 0 0, 12px 12px;
+}
+
+.dark .chat-pattern-bg {
+  background-color: #12140D;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.05) 0.8px, transparent 0.8px), radial-gradient(rgba(255, 255, 255, 0.05) 0.8px, #12140D 0.8px);
+  background-size: 24px 24px;
+  background-position: 0 0, 12px 12px;
+}
+
+/* Sidebar right border shadow */
+.sidebar-right-shadow {
+  box-shadow: 6px 0 20px -4px rgba(0, 0, 0, 0.09);
+}
+
+.dark .sidebar-right-shadow {
+  box-shadow: 6px 0 24px -4px rgba(0, 0, 0, 0.5);
+}

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useMemo, useRef, useEffect, useCallback } from "react";
+import { useMemo, useRef, useEffect, useCallback, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Send,
@@ -9,13 +9,17 @@ import {
   Smile,
   ShieldCheck,
   PanelLeftOpen,
-  PanelLeftClose,
   MessageSquare,
   Loader2,
+  Check,
+  CheckCheck,
+  AlertCircle,
+  ChevronDown,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { ChatSidebar } from "@/components/chat/chat-sidebar";
+import { CreateGroupModal } from "@/components/chat/create-group-modal";
 import { Button } from "@/components/ui/button";
 import { useAppSelector } from "@/lib/redux/hooks";
 import { selectActiveConversation } from "@/lib/redux/slices/chatSlice";
@@ -24,8 +28,10 @@ import { useSocket } from "@/hooks/use-socket";
 import { Message } from "@/types/conversation";
 
 export default function ChatPage() {
-  const [sidebarOpen, setSidebarOpen] = React.useState(true);
-  const [messageText, setMessageText] = React.useState("");
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [createGroupModalOpen, setCreateGroupModalOpen] = useState(false);
+  const [messageText, setMessageText] = useState("");
+  const [showScrollBottomButton, setShowScrollBottomButton] = useState(false);
 
   // Initialize Socket.io connection for real-time messaging
   useSocket();
@@ -38,16 +44,43 @@ export default function ChatPage() {
   const { messages, isLoading, error } = useMessages(activeConversation?._id ?? null);
   const { sendMessage, isSending } = useSendMessage();
 
-  // Auto-scroll ref
+  // Scroll Refs
+  const messagesContainerRef = useRef<HTMLDivElement | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const isScrolledUpRef = useRef(false);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    setShowScrollBottomButton(false);
+    isScrolledUpRef.current = false;
+  }, []);
+
+  // Smart Scroll Guard Handler
+  const handleScroll = useCallback(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const distanceFromBottom =
+      container.scrollHeight - (container.scrollTop + container.clientHeight);
+
+    // If user is more than 120px away from bottom, mark as scrolled up
+    const scrolledUp = distanceFromBottom > 120;
+    isScrolledUpRef.current = scrolledUp;
+    setShowScrollBottomButton(scrolledUp);
   }, []);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, scrollToBottom]);
+    if (messages.length === 0) return;
+
+    const lastMsg = messages[messages.length - 1];
+    const lastSenderId = typeof lastMsg?.sender === "object" ? lastMsg.sender?._id : lastMsg?.sender;
+    const isMe = Boolean(currentUser?._id && lastSenderId === currentUser._id) || lastSenderId === "You";
+
+    // Auto-scroll if user is near bottom OR if the last message was sent by me
+    if (!isScrolledUpRef.current || isMe) {
+      scrollToBottom();
+    }
+  }, [messages, currentUser?._id, scrollToBottom]);
 
   // Derived Header Identity — O(1) pass
   const headerInfo = useMemo(() => {
@@ -97,14 +130,25 @@ export default function ChatPage() {
 
     try {
       await sendMessage(activeConversation._id, textToSend);
+      scrollToBottom();
     } catch (err) {
       console.error("Failed to send message:", err);
     }
   };
 
+  const handleToggleSidebar = useCallback(() => {
+    setSidebarOpen((prev) => !prev);
+  }, []);
+
   return (
     <ProtectedRoute>
-      <div className="h-screen flex bg-brand-primary/20 dark:bg-[#0D100B] text-brand-dark dark:text-foreground overflow-hidden">
+      <div className="h-screen flex bg-[#FFEED6] dark:bg-[#0D100B] text-brand-dark dark:text-foreground overflow-hidden">
+        {/* ── Group Creation Modal ── */}
+        <CreateGroupModal
+          isOpen={createGroupModalOpen}
+          onClose={() => setCreateGroupModalOpen(false)}
+        />
+
         {/* ── Desktop Sidebar ── */}
         <AnimatePresence initial={false}>
           {sidebarOpen && (
@@ -116,7 +160,10 @@ export default function ChatPage() {
               transition={{ type: "spring", damping: 28, stiffness: 240 }}
               className="hidden md:block h-full shrink-0 overflow-hidden"
             >
-              <ChatSidebar />
+              <ChatSidebar
+                onToggleSidebar={handleToggleSidebar}
+                onNewChatClick={() => setCreateGroupModalOpen(true)}
+              />
             </motion.aside>
           )}
         </AnimatePresence>
@@ -142,31 +189,32 @@ export default function ChatPage() {
                 transition={{ type: "spring", damping: 25, stiffness: 220 }}
                 className="fixed top-0 left-0 bottom-0 z-50 md:hidden"
               >
-                <ChatSidebar />
+                <ChatSidebar
+                  onToggleSidebar={handleToggleSidebar}
+                  onNewChatClick={() => setCreateGroupModalOpen(true)}
+                />
               </motion.aside>
             </>
           )}
         </AnimatePresence>
 
         {/* ── Main Chat Area ── */}
-        <main className="flex-1 flex flex-col justify-between bg-white/70 dark:bg-[#12140D] min-w-0">
+        <main className="flex-1 flex flex-col justify-between bg-[#FFEED6] dark:bg-[#12140D] min-w-0 relative">
           {/* Top Chat Header */}
-          <header className="h-16 border-b border-brand-dark/15 dark:border-white/10 px-4 sm:px-6 flex items-center justify-between bg-brand-secondary/40 dark:bg-card shrink-0">
+          <header className="h-16 border-b border-brand-dark/15 dark:border-white/10 px-4 sm:px-6 flex items-center justify-between bg-[#FFEED6] dark:bg-card shrink-0">
             <div className="flex items-center gap-3 min-w-0">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setSidebarOpen((prev) => !prev)}
-                className="text-brand-dark dark:text-secondary hover:bg-black/10 dark:hover:bg-white/10 shrink-0 transition-colors"
-                aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
-                title={sidebarOpen ? "Close sidebar" : "Open sidebar"}
-              >
-                {sidebarOpen ? (
-                  <PanelLeftClose className="h-5 w-5" />
-                ) : (
+              {!sidebarOpen && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleToggleSidebar}
+                  className="text-brand-dark dark:text-secondary hover:bg-black/10 dark:hover:bg-white/10 shrink-0 transition-colors rounded-xl"
+                  aria-label="Open sidebar"
+                  title="Open sidebar"
+                >
                   <PanelLeftOpen className="h-5 w-5" />
-                )}
-              </Button>
+                </Button>
+              )}
 
               {headerInfo ? (
                 <div className="flex items-center gap-3 min-w-0">
@@ -199,7 +247,11 @@ export default function ChatPage() {
           </header>
 
           {/* Messages Body */}
-          <div className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4">
+          <div
+            ref={messagesContainerRef}
+            onScroll={handleScroll}
+            className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4 chat-pattern-bg relative"
+          >
             {!activeConversation ? (
               <div className="h-full flex flex-col items-center justify-center text-center p-6 gap-3">
                 <div className="h-16 w-16 rounded-3xl bg-brand-dark/10 dark:bg-white/10 flex items-center justify-center">
@@ -242,8 +294,11 @@ export default function ChatPage() {
                   typeof msg.sender === "object"
                     ? msg.sender?.name ?? "User"
                     : isMe
-                    ? "You"
+                    ? currentUser?.name || "You"
                     : "User";
+
+                const myInitial = (currentUser?.name || "You").trim().charAt(0).toUpperCase();
+                const senderInitial = (senderName || "U").trim().charAt(0).toUpperCase();
 
                 const timeFormatted = new Date(msg.createdAt || Date.now()).toLocaleTimeString([], {
                   hour: "2-digit",
@@ -257,7 +312,7 @@ export default function ChatPage() {
                   >
                     {!isMe && (
                       <div className="h-9 w-9 rounded-2xl bg-brand-dark text-secondary dark:bg-secondary dark:text-brand-dark text-xs font-black flex items-center justify-center shrink-0 shadow-md">
-                        {senderName.charAt(0).toUpperCase()}
+                        {senderInitial}
                       </div>
                     )}
 
@@ -266,8 +321,27 @@ export default function ChatPage() {
                         <span className="text-xs font-extrabold text-brand-dark dark:text-secondary">
                           {isMe ? "You" : senderName}
                         </span>
-                        <span className="text-[10px] font-bold text-brand-muted dark:text-muted-foreground">
+                        <span className="text-[10px] font-bold text-brand-muted dark:text-muted-foreground flex items-center gap-1">
                           {timeFormatted}
+                          {isMe && (
+                            msg.status === "failed" ? (
+                              <span className="flex items-center gap-0.5 text-destructive font-black text-[10px] ml-1 shrink-0" title="Not sent. Failed to deliver.">
+                                <AlertCircle className="h-3.5 w-3.5 text-destructive inline shrink-0" /> Not sent
+                              </span>
+                            ) : msg.status === "sending" ? (
+                              <span title="Sending...">
+                                <Loader2 className="h-3 w-3 animate-spin text-brand-muted/60 dark:text-muted-foreground/60 inline shrink-0 ml-0.5" />
+                              </span>
+                            ) : msg.status === "sent" ? (
+                              <span title="Sent">
+                                <Check className="h-3.5 w-3.5 text-brand-muted/70 dark:text-muted-foreground/70 inline shrink-0 ml-0.5" />
+                              </span>
+                            ) : (
+                              <span title="Seen">
+                                <CheckCheck className="h-3.5 w-3.5 text-emerald-500 dark:text-emerald-400 inline shrink-0 ml-0.5" />
+                              </span>
+                            )
+                          )}
                         </span>
                       </div>
                       <div
@@ -282,8 +356,8 @@ export default function ChatPage() {
                     </div>
 
                     {isMe && (
-                      <div className="h-9 w-9 rounded-2xl bg-secondary text-brand-dark dark:bg-brand-dark dark:text-secondary text-xs font-black flex items-center justify-center shrink-0 shadow-md">
-                        Y
+                      <div className="h-9 w-9 rounded-2xl bg-brand-dark text-secondary dark:bg-secondary dark:text-brand-dark text-xs font-black flex items-center justify-center shrink-0 shadow-md">
+                        {myInitial}
                       </div>
                     )}
                   </div>
@@ -293,10 +367,26 @@ export default function ChatPage() {
             <div ref={messagesEndRef} />
           </div>
 
+          {/* Floating Scroll-to-Bottom Button */}
+          <AnimatePresence>
+            {showScrollBottomButton && (
+              <motion.button
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                onClick={scrollToBottom}
+                className="absolute bottom-20 right-8 z-30 px-3.5 py-2 rounded-2xl bg-brand-dark text-secondary dark:bg-secondary dark:text-brand-dark text-xs font-black shadow-xl flex items-center gap-2 cursor-pointer hover:scale-105 transition-transform border border-brand-dark/20 dark:border-white/20"
+              >
+                <ChevronDown className="h-4 w-4" />
+                <span>Scroll to latest messages</span>
+              </motion.button>
+            )}
+          </AnimatePresence>
+
           {/* Message Input Bar */}
           <form
             onSubmit={handleSendMessage}
-            className="p-3 sm:p-4 border-t border-brand-dark/15 dark:border-white/10 bg-brand-secondary/30 dark:bg-card shrink-0"
+            className="p-3 sm:p-4 border-t border-brand-dark/15 dark:border-white/10 bg-[#FFEED6] dark:bg-card shrink-0"
           >
             <div className="flex items-center gap-2 rounded-2xl border-2 border-brand-dark/15 dark:border-white/10 bg-white dark:bg-background px-4 py-2.5 shadow-lg">
               <Button

@@ -48,6 +48,9 @@ export const chatSlice = createSlice({
 
     setActiveConversationId: (state, action: PayloadAction<string | null>) => {
       state.activeConversationId = action.payload;
+      if (action.payload && state.byId[action.payload]) {
+        state.byId[action.payload].unreadCount = 0;
+      }
     },
 
     setConversationsStatus: (state, action: PayloadAction<FetchStatus>) => {
@@ -62,8 +65,18 @@ export const chatSlice = createSlice({
     upsertConversation: (state, action: PayloadAction<Conversation>) => {
       const conv = action.payload;
       if (!conv || !conv._id) return;
-      const isNew = !state.byId[conv._id];
-      state.byId[conv._id] = conv;
+
+      const existing = state.byId[conv._id];
+      const isNew = !existing;
+      let unreadCount = conv.unreadCount ?? existing?.unreadCount ?? 0;
+
+      if (state.activeConversationId === conv._id) {
+        unreadCount = 0;
+      } else if (conv.lastMessage) {
+        unreadCount = Math.max(1, unreadCount + 1);
+      }
+
+      state.byId[conv._id] = { ...conv, unreadCount };
       if (isNew) {
         state.ids.unshift(conv._id);
       }

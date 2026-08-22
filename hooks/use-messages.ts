@@ -43,25 +43,46 @@ export function useSendMessage() {
   const mutation = useMutation({
     mutationFn: ({ conversationId, text }: { conversationId: string; text: string }) =>
       sendMessageApi(conversationId, text),
-    onSuccess: (rawResponse, variables) => {
+
+    onMutate: async ({ conversationId, text }) => {
+      const tempId = `temp-${Date.now()}`;
+      const optimisticMsg: Message = {
+        _id: tempId,
+        conversationId,
+        sender: "You",
+        text,
+        createdAt: new Date().toISOString(),
+        status: "sending",
+        isSeen: false,
+      };
+
+      queryClient.setQueryData<Message[]>(["messages", conversationId], (old) => {
+        const list = old ? [...old] : [];
+        list.push(optimisticMsg);
+        return list;
+      });
+
+      return { tempId };
+    },
+
+    onSuccess: (rawResponse, variables, context) => {
       const msgObj: Message = (rawResponse as any)?.data ?? (rawResponse as any)?.message ?? rawResponse;
       if (!msgObj || !variables.conversationId) return;
 
       const normalizedMessage: Message = {
-        _id: msgObj._id || Date.now().toString(),
+        _id: msgObj._id || context?.tempId || Date.now().toString(),
         conversationId: msgObj.conversationId || variables.conversationId,
         sender: msgObj.sender || "You",
         text: msgObj.text || variables.text,
         createdAt: msgObj.createdAt || new Date().toISOString(),
+        status: "seen",
+        isSeen: true,
       };
 
       queryClient.setQueryData<Message[]>(["messages", variables.conversationId], (old) => {
         const list = old ? [...old] : [];
         const existingIndex = list.findIndex(
-          (m) =>
-            m._id === normalizedMessage._id ||
-            (m.text === normalizedMessage.text &&
-              Math.abs(new Date(m.createdAt || 0).getTime() - new Date(normalizedMessage.createdAt).getTime()) < 3000)
+          (m) => m._id === context?.tempId || m._id === normalizedMessage._id
         );
 
         if (existingIndex >= 0) {
@@ -76,6 +97,16 @@ export function useSendMessage() {
       });
 
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
+    },
+
+    onError: (_err, variables, context) => {
+      if (!context?.tempId) return;
+      queryClient.setQueryData<Message[]>(["messages", variables.conversationId], (old) => {
+        if (!old) return [];
+        return old.map((m) =>
+          m._id === context.tempId ? { ...m, status: "failed" } : m
+        );
+      });
     },
   });
 

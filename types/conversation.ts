@@ -29,18 +29,19 @@ export interface DirectConversation {
   type: "direct";
   participant: Participant;
   lastMessage: LastMessage | null;
-  updatedAt: string; // ISO 8601 — used for sorting: O(n log n)
+  updatedAt: string;
+  unreadCount?: number;
 }
 
-/** A group conversation (3+ members) */
 export interface GroupConversation {
   _id: string;
   type: "group";
   name: string;
   participants: Participant[];
-  admins?: string[]; // array of user _ids
+  admins?: string[];
   lastMessage: LastMessage | null;
   updatedAt: string;
+  unreadCount?: number;
 }
 
 /** Union — sidebar renders either type */
@@ -71,11 +72,15 @@ export interface MessageSender {
   phone?: string;
 }
 
+export type MessageStatus = "sending" | "sent" | "seen" | "failed";
+
 export interface Message {
   _id: string;
   conversationId: string;
   sender: MessageSender | string;
   text: string;
   createdAt: string;
+  status?: MessageStatus;
+  isSeen?: boolean;
 }
 
